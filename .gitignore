@@ -1,0 +1,30 @@
+## Visual Studio / .NET Core
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userprefs
+
+# Local settings / Secrets
+appsettings.local.json
+secrets.json

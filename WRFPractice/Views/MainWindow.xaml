@@ -1,0 +1,229 @@
+<Window x:Class="WRFPractice.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewmodels="clr-namespace:WRFPractice.ViewModels"
+        xmlns:models="clr-namespace:WRFPractice.Models"
+        mc:Ignorable="d"
+        Title="AI Chat Studio"
+        Height="700"
+        Width="920"
+        MinHeight="550"
+        MinWidth="650"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource WindowBackgroundBrush}"
+        FontFamily="Segoe UI, Yu Gothic UI">
+
+    <Window.DataContext>
+        <viewmodels:MainViewModel />
+    </Window.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Header -->
+            <RowDefinition Height="Auto" />
+            <!-- Chat Messages -->
+            <RowDefinition Height="*" />
+            <!-- Input Area -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- HEADER -->
+        <Border Grid.Row="0"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="20,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: App Title & Model Badge -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#EEF2FF" CornerRadius="8" Padding="8,6" Margin="0,0,12,0">
+                        <TextBlock Text="✨" FontSize="16" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="AI Chat Studio"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                            <!-- Model Badge -->
+                            <Border Background="#F1F5F9"
+                                    CornerRadius="4"
+                                    Padding="6,2"
+                                    Margin="0,0,8,0">
+                                <TextBlock Text="{Binding ProviderDisplayName}"
+                                           FontSize="11"
+                                           FontWeight="Medium"
+                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                            </Border>
+                            <!-- Status -->
+                            <TextBlock Text="{Binding StatusText}"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Right: Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="🗑 履歴クリア"
+                            Style="{StaticResource ModernGhostButton}"
+                            Command="{Binding ClearHistoryCommand}"
+                            Margin="0,0,8,0" />
+                    <Button Content="⚙ 設定"
+                            Style="{StaticResource ModernGhostButton}"
+                            Command="{Binding OpenSettingsCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- CHAT AREA -->
+        <ScrollViewer Grid.Row="1"
+                      x:Name="ChatScrollViewer"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="20,16">
+            <StackPanel>
+                <!-- Messages List -->
+                <ItemsControl ItemsSource="{Binding Messages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type viewmodels:ChatMessageViewModel}">
+                            <Grid Margin="0,6,0,10"
+                                  HorizontalAlignment="{Binding Role, Converter={StaticResource RoleToAlignmentConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Bubble Container -->
+                                <Border Grid.Column="1"
+                                        Background="{Binding Role, Converter={StaticResource RoleToBgConverter}}"
+                                        BorderBrush="{Binding Role, Converter={StaticResource RoleToBorderConverter}}"
+                                        BorderThickness="1"
+                                        CornerRadius="14"
+                                        Padding="14,10"
+                                        MaxWidth="640">
+                                    <StackPanel>
+                                        <!-- Header inside bubble: Role & Time -->
+                                        <Grid Margin="0,0,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Role, Converter={StaticResource RoleToNameConverter}}"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{Binding Role, Converter={StaticResource RoleToFgConverter}}"
+                                                       Opacity="0.85" />
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding FormattedTime}"
+                                                       FontSize="10"
+                                                       Foreground="{Binding Role, Converter={StaticResource RoleToFgConverter}}"
+                                                       Opacity="0.65"
+                                                       Margin="8,0,0,0" />
+                                        </Grid>
+
+                                        <!-- Message Content -->
+                                        <TextBox Text="{Binding Content, Mode=OneWay}"
+                                                 IsReadOnly="True"
+                                                 BorderThickness="0"
+                                                 Background="Transparent"
+                                                 Foreground="{Binding Role, Converter={StaticResource RoleToFgConverter}}"
+                                                 FontSize="13.5"
+                                                 LineHeight="20"
+                                                 TextWrapping="Wrap"
+                                                 Cursor="Arrow"
+                                                 Padding="0" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Typing / Loading Indicator -->
+                <Border Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}"
+                        HorizontalAlignment="Left"
+                        Background="{StaticResource AiBubbleBackgroundBrush}"
+                        CornerRadius="14"
+                        Padding="14,10"
+                        Margin="0,6,0,10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🤖 AIが考え中..."
+                                   FontSize="12"
+                                   FontStyle="Italic"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- INPUT AREA -->
+        <Border Grid.Row="2"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Input Box -->
+                <TextBox Grid.Row="0"
+                         Grid.Column="0"
+                         x:Name="MessageInputBox"
+                         Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource ModernChatTextBox}"
+                         MinHeight="44"
+                         MaxHeight="120"
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         PreviewKeyDown="MessageInputBox_PreviewKeyDown"
+                         Margin="0,0,12,0" />
+
+                <!-- Action Button (Send / Cancel) -->
+                <StackPanel Grid.Row="0"
+                            Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Bottom">
+                    <!-- Cancel Button (when generating) -->
+                    <Button Content="⏹ 中止"
+                            Style="{StaticResource ModernGhostButton}"
+                            Command="{Binding CancelCommand}"
+                            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}"
+                            Margin="0,0,8,0"
+                            Height="42" />
+
+                    <!-- Send Button -->
+                    <Button Content="送信 ➔"
+                            Style="{StaticResource ModernPrimaryButton}"
+                            Command="{Binding SendMessageCommand}"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
+                            Height="42"
+                            Width="80" />
+                </StackPanel>
+
+                <!-- Input Guide / Shortcut Hint -->
+                <TextBlock Grid.Row="1"
+                           Grid.Column="0"
+                           Text="Enterで送信、Shift+Enterで改行"
+                           FontSize="11"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           Margin="4,6,0,0" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
